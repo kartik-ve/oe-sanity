@@ -135,11 +135,7 @@ final class ReadyAPIReportGenerator {
 
                         // Rename failed step's api_response file
                         if (apiResponsesDir != null && !apiResponsesDir.isEmpty()) {
-                            try {
-                                renameApiResponseFile(apiResponsesDir, testSuiteName, testCaseName, failedStep);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            renameApiResponseFile(apiResponsesDir, testSuiteName, testCaseName, failedStep);
                         }
 
                         results.totalFailed++;
