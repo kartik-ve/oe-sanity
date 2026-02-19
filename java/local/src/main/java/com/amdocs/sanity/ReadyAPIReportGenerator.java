@@ -161,7 +161,13 @@ final class ReadyAPIReportGenerator {
 
     private static void renameApiResponseFile(String apiResponsesDir, String testSuiteName, String testCaseName,
             String failedStep) throws IOException {
+
         failedStep = failedStep.replace("&amp;", "&");
+
+        failedStep = sanitizeFileName(failedStep);
+        testSuiteName = sanitizeFileName(testSuiteName);
+        testCaseName = sanitizeFileName(testCaseName);
+
         Path oldPath = Paths.get(apiResponsesDir, testSuiteName, testCaseName, failedStep + ".txt");
         Path newPath = oldPath.resolveSibling(failedStep + " ~FAILED.txt");
         try {
@@ -169,6 +175,13 @@ final class ReadyAPIReportGenerator {
         } catch (IOException e) {
             throw new IOException("Failed to rename API response file: " + oldPath, e);
         }
+    }
+
+    private static String sanitizeFileName(String name) {
+        if (name == null) {
+            return "";
+        }
+        return name.replaceAll("[<>:\"/\\\\|?*]", "_");
     }
 
     private static TestResults mergeResults(List<TestResults> resultsList) {
