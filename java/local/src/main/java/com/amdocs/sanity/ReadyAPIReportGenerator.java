@@ -135,7 +135,12 @@ final class ReadyAPIReportGenerator {
 
                         // Rename failed step's api_response file
                         if (apiResponsesDir != null && !apiResponsesDir.isEmpty()) {
-                            renameApiResponseFile(apiResponsesDir, testSuiteName, testCaseName, failedStep);
+                            try {
+                                renameApiResponseFile(apiResponsesDir, testSuiteName, testCaseName, failedStep);
+                            } catch (IOException e) {
+                                System.err.println("Failed to rename API response file for failed step: " + failedStep);
+                                e.printStackTrace();
+                            }
                         }
 
                         results.totalFailed++;
@@ -166,11 +171,7 @@ final class ReadyAPIReportGenerator {
 
         Path oldPath = Paths.get(apiResponsesDir, testSuiteName, testCaseName, failedStep + ".txt");
         Path newPath = oldPath.resolveSibling(failedStep + " ~FAILED.txt");
-        try {
-            Files.move(oldPath, newPath);
-        } catch (IOException e) {
-            throw new IOException("Failed to rename API response file: " + oldPath, e);
-        }
+        Files.move(oldPath, newPath);
     }
 
     private static String sanitizeFileName(String name) {
