@@ -18,8 +18,8 @@ public class LogSearch {
         String fileName = args[0].substring(0, args[0].lastIndexOf("."));
 
         try (BufferedReader br = new BufferedReader(new FileReader(args[0]), 32 * 1024);
-                BufferedWriter uniqueOverall = new BufferedWriter(new FileWriter(fileName + "_uniq_all.log"));
-                BufferedWriter uniqueInSession = new BufferedWriter(new FileWriter(fileName + "_uniq_sesh.log"));
+                BufferedWriter uniqueOverall = new BufferedWriter(new FileWriter(fileName + ".err"));
+                BufferedWriter uniqueInSession = new BufferedWriter(new FileWriter(fileName + "_uniq_sesh.err"));
                         ) {
             findAndLogErrors(br, uniqueOverall, uniqueInSession);
         } catch (Exception e) {
