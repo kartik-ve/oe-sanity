@@ -1,6 +1,7 @@
 package com.amdocs.sanity;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -26,6 +27,18 @@ public final class SanityRunner {
         String jobName = args[3];
         Path processedTestCaseDataDir = Paths.get(outputDir).resolve("processed_tc_data");
         Path failedTestCaseDataDir = Paths.get(outputDir).resolve("failed_tc_data");
+        
+        try {
+            Files.createDirectories(processedTestCaseDataDir);
+        } catch (IOException e) {
+            System.err.println("Failed to create output directory: " + e.getMessage());
+        }
+
+        try {
+            Files.createDirectories(failedTestCaseDataDir);
+        } catch (IOException e) {
+            System.err.println("Failed to create output directory: " + e.getMessage());
+        }
 
         int exitCode = 0;
 
