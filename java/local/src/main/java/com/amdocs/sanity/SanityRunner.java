@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 
 public final class SanityRunner {
 
+    private static final String PROCESSED_DIR = "processed_tc_data";
+    private static final String FAILED_DIR = "failed_tc_data";
+
     private SanityRunner() {
     }
 
@@ -25,9 +28,9 @@ public final class SanityRunner {
         String testCaseDataDir = args[1];
         String outputDir = args[2];
         String jobName = args[3];
-        Path processedTestCaseDataDir = Paths.get(outputDir).resolve("processed_tc_data");
-        Path failedTestCaseDataDir = Paths.get(outputDir).resolve("failed_tc_data");
-        
+        Path processedTestCaseDataDir = Paths.get(outputDir).resolve(PROCESSED_DIR);
+        Path failedTestCaseDataDir = Paths.get(outputDir).resolve(FAILED_DIR);
+
         try {
             Files.createDirectories(processedTestCaseDataDir);
         } catch (IOException e) {
@@ -70,7 +73,7 @@ public final class SanityRunner {
             String originalFileName = originalPath.getFileName().toString();
             Path excelPath = Paths.get(outputDir, "Exceptions.xlsx");
             String[] flows = args[5].split("\\|");
-            
+
             int project = -1;
             if (args[6].equalsIgnoreCase("OE")) {
                 project = 1;
