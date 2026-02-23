@@ -43,7 +43,7 @@ public final class SanityRunner {
             System.out.println("  Failed: " + summary.totalFailed);
             System.out.println("  Total Time: " + String.format("%.3f", summary.totalTime) + "s");
 
-            ProcessAPIResults.processResultFiles(Paths.get(testCaseDataDir), processedTestCaseDataDir);
+            ProcessAPIData.processFiles(Paths.get(testCaseDataDir), processedTestCaseDataDir);
 
             CopyFailedResponses.copy(processedTestCaseDataDir, failedTestCaseDataDir);
             System.out.println("Copied Failed Test Case Data!");

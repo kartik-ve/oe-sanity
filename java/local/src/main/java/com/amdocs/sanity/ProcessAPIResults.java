@@ -5,11 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-final class ProcessAPIResults {
-    private ProcessAPIResults() {
+final class ProcessAPIData {
+    private ProcessAPIData() {
     }
 
-    public static void processResultFiles(Path inputRoot, Path outputRoot) throws IOException {
+    public static void processFiles(Path inputRoot, Path outputRoot) throws IOException {
         Files.walk(inputRoot)
                 .filter(Files::isDirectory)
                 .forEach(dir -> processDirectory(dir, inputRoot, outputRoot));
