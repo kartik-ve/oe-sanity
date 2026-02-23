@@ -21,7 +21,7 @@ public class LogSearch {
                 BufferedWriter uniqueOverall = new BufferedWriter(new FileWriter(fileName + ".err"));
                 BufferedWriter uniqueInSession = new BufferedWriter(new FileWriter(fileName + "_uniq_sesh.err"));
                         ) {
-            findAndLogErrors(br, uniqueOverall, uniqueInSession);
+            findAndLogErrors(br, uniqueOverall, null);
         } catch (Exception e) {
             e.printStackTrace();
             return;
