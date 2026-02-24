@@ -9,7 +9,7 @@ final class ProcessAPIData {
     private ProcessAPIData() {
     }
 
-    public static void processFiles(Path inputRoot, Path outputRoot) throws IOException {
+    static void processFiles(Path inputRoot, Path outputRoot) throws IOException {
         Files.walk(inputRoot)
                 .filter(Files::isDirectory)
                 .forEach(dir -> processDirectory(dir, inputRoot, outputRoot));
