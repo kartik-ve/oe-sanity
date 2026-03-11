@@ -20,7 +20,15 @@ final class LogsToExcel {
     private LogsToExcel() {
     }
 
-    static void log(Path logFile, Path excelPath, String flow, int project, String dmp, String env, String tester) throws IOException {
+    static void log(
+            Path logFile,
+            Path excelFilePath,
+            String flow,
+            int project,
+            String dmp,
+            String env,
+            String tester)
+            throws IOException {
         List<String> exceptions;
 
         Flow f;
@@ -32,7 +40,7 @@ final class LogsToExcel {
 
         try (BufferedReader br = new BufferedReader(new FileReader(logFile.toFile()), 32 * 1024);) {
             exceptions = findErrors(br);
-            createExcel(exceptions, excelPath, f, project, dmp, env, tester);
+            createExcel(exceptions, excelFilePath, f, project, dmp, env, tester);
         }
     }
 
@@ -58,17 +66,16 @@ final class LogsToExcel {
                     }
                 }
 
-                if (!isDigitOnly) {
+                if (isDigitOnly) {
                     break;
                 }
             }
 
+            exception.append(line);
             openTags += calculateOpenTags(line);
             if (openTags == 0) {
                 exceptions.add(exception.toString().trim());
                 exception.setLength(0);
-            } else {
-                exception.append(line);
             }
         }
 
@@ -108,10 +115,16 @@ final class LogsToExcel {
         }
     }
 
-    private static void createExcel(List<String> exceptions, Path excelPath,
-            Flow flow, int project, String dmp, String env, String tester) throws IOException {
+    private static void createExcel(
+            List<String> exceptions,
+            Path excelFilePath,
+            Flow flow,
+            int project,
+            String dmp,
+            String env,
+            String tester) throws IOException {
 
-        File file = excelPath.toFile();
+        File file = excelFilePath.toFile();
         Workbook workbook;
 
         if (file.exists()) {
