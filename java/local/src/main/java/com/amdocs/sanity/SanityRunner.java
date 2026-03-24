@@ -10,7 +10,6 @@ public final class SanityRunner {
     }
 
     public static void main(String[] args) {
-
         Map<String, String> params = parseArgs(args);
 
         Properties config = new Properties();
@@ -25,20 +24,17 @@ public final class SanityRunner {
 
         String junitDirName = config.getProperty("dir.junit");
         String tcDataDirName = config.getProperty("dir.tcdata");
-        String processedDirName = config.getProperty("dir.processed");
         String failedDirName = config.getProperty("dir.failed");
         String errorDirName = config.getProperty("dir.errorlogs");
 
         Path junitDir = buildDir.resolve(junitDirName);
         Path tcDataDir = buildDir.resolve(tcDataDirName);
-        Path processedDir = buildDir.resolve(processedDirName);
         Path failedDir = buildDir.resolve(failedDirName);
         Path errorDir = buildDir.resolve(errorDirName);
 
         int exitCode = 0;
 
         try {
-            Files.createDirectories(processedDir);
             Files.createDirectories(failedDir);
 
             ReadyAPIReportGenerator.ReportSummary summary = ReadyAPIReportGenerator.generateReport(
@@ -54,10 +50,7 @@ public final class SanityRunner {
             System.out.println("  Failed: " + summary.totalFailed);
             System.out.println("  Total Time: " + String.format("%.3f", summary.totalTime) + "s");
 
-            ProcessAPIData.processFiles(tcDataDir, processedDir);
-            System.out.println("Processed Test Case Data!");
-
-            CopyFailedResponses.copy(processedDir, failedDir);
+            CopyFailedTestCaseData.copy(tcDataDir, failedDir);
             System.out.println("Copied Failed Test Cases' Data!");
         } catch (Exception e) {
             exitCode = 1;
@@ -65,16 +58,20 @@ public final class SanityRunner {
         }
 
         if ("EXTENDED".equalsIgnoreCase(params.get("type"))) {
-            String flows = params.getOrDefault("flows", config.getProperty("flows"));
-            String[] flowArray = flows.split("\\|");
+            String[] flows = params.getOrDefault("flows", config.getProperty("flows")).split("\\|");
 
             int project = Integer.parseInt(config.getProperty("project." + params.get("project").toLowerCase()));
 
             Path excelPath = buildDir.resolve(config.getProperty("dir.exceptions"));
 
             try {
-                for (String flow : flowArray) {
+                for (String flow : flows) {
                     Path logFile = errorDir.resolve(flow.toUpperCase() + ".err");
+
+                    if (!Files.exists(logFile)) {
+                        continue;
+                    }
+
                     LogsToExcel.log(logFile, excelPath, flow, project,
                             params.get("dmp"),
                             params.get("env"),

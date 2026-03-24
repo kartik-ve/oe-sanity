@@ -128,9 +128,9 @@ final class ReadyAPIReportGenerator {
                         // Rename failed step's api_response file
                         if (apiResponsesDir != null && !apiResponsesDir.isEmpty()) {
                             try {
-                                renameApiResponseFile(apiResponsesDir, testSuiteName, testCaseName, failedStep);
+                                renameFailedTestCaseDirectory(apiResponsesDir, testSuiteName, testCaseName);
                             } catch (IOException e) {
-                                System.err.println("Failed to rename API response file for failed step: " + failedStep);
+                                System.err.println("Failed to rename failed testcase directory: " + testCaseName);
                                 e.printStackTrace();
                             }
                         }
@@ -152,17 +152,29 @@ final class ReadyAPIReportGenerator {
         return results;
     }
 
-    private static void renameApiResponseFile(String apiResponsesDir, String testSuiteName, String testCaseName,
-            String failedStep) throws IOException {
+    private static void renameFailedTestCaseDirectory(String apiResponsesDir,
+            String testSuiteName,
+            String testCaseName) throws IOException {
 
-        failedStep = failedStep.replace("&amp;", "&");
-
-        failedStep = sanitizeFileName(failedStep);
         testSuiteName = sanitizeFileName(testSuiteName);
         testCaseName = sanitizeFileName(testCaseName);
 
-        Path oldPath = Paths.get(apiResponsesDir, testSuiteName, testCaseName, failedStep + ".txt");
-        Path newPath = oldPath.resolveSibling(failedStep + " ~FAILED.txt");
+        if (testCaseName.endsWith("~FAILED")) {
+            return;
+        }
+
+        Path oldPath = Paths.get(apiResponsesDir, testSuiteName, testCaseName);
+
+        if (!Files.exists(oldPath)) {
+            throw new IOException("Directory not found: " + oldPath);
+        }
+
+        Path newPath = oldPath.resolveSibling(testCaseName + " ~FAILED");
+
+        if (Files.exists(newPath)) {
+            throw new IOException("Target already exists: " + newPath);
+        }
+
         Files.move(oldPath, newPath);
     }
 
@@ -390,7 +402,7 @@ final class ReadyAPIReportGenerator {
         }
     }
 
-    static ReportSummary generateReport(String inputPath, String outputPath, String jobName, String apiResponsesDir,
+    static ReportSummary generateReport(String junitPath, String outputPath, String jobName, String apiResponsesDir,
             Consumer<String> logger) throws IOException, ParserConfigurationException, SAXException {
 
         if (logger == null) {
@@ -399,14 +411,13 @@ final class ReadyAPIReportGenerator {
         }
 
         List<File> xmlFiles = new ArrayList<>();
-        File input = new File(inputPath);
 
-        if (!input.isDirectory()) {
-            throw new IllegalArgumentException("Input path is not a directory: " + inputPath);
+        if (!new File(junitPath).isDirectory()) {
+            throw new IllegalArgumentException("Provided JUnit path is not a directory: " + junitPath);
         }
 
         // Process all XML files in directory
-        try (Stream<Path> paths = Files.walk(Paths.get(inputPath))) {
+        try (Stream<Path> paths = Files.walk(Paths.get(junitPath))) {
             xmlFiles = paths
                     .filter(Files::isRegularFile)
                     .filter(p -> p.toString().endsWith(".xml"))
@@ -416,7 +427,7 @@ final class ReadyAPIReportGenerator {
         }
 
         if (xmlFiles.isEmpty()) {
-            throw new IllegalArgumentException("No XML files found in input path: " + inputPath);
+            throw new IllegalArgumentException("No XML files found in input path: " + junitPath);
         }
 
         logger.accept("Found " + xmlFiles.size() + " XML file(s)");
