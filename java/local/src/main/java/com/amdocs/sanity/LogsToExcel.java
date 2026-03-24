@@ -27,7 +27,8 @@ final class LogsToExcel {
         RP("RP"),
         MT("MT"),
         BT("BT"),
-        SU("SU");
+        SU("SU"),
+        COAM("COAM");
 
         private final String label;
 
