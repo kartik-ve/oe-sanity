@@ -145,21 +145,34 @@ def runWithRetry = { testRunner, context ->
     log.info isReadyAPI
 
     def testCase = context.testCase
+    def testSuite = testCase.testSuite
     def testSteps = testCase.getTestStepList()
+
+    def workspace = System.getenv("WORKSPACE")
+    def buildNumber = System.getenv("BUILD_NUMBER")
+
+    def rootOutputDir
+
+    if (workspace && buildNumber) {
+        rootOutputDir = new File("${workspace}/${buildNumber}/tc_data")
+    } else {
+        def basePath = new File(project.path).parentFile.path
+        rootOutputDir = new File("${basePath}/tc_data")
+    }
 
     for (step in testSteps) {
 
-        def stepName = step.getName()
+        def testStepName = step.getName()
 
         if (step.isDisabled()) {
-            log.info "Skipping disabled step: ${stepName}"
+            log.info "Skipping disabled step: ${testStepName}"
             continue
         }
 
         def stepType = step.getClass().getSimpleName()
         def isApiStep = stepType in ["RestTestRequestStep", "HttpTestRequestStep"]
 
-        log.info "Executing step: ${stepName} (${stepType})"
+        log.info "Executing step: ${testStepName} (${stepType})"
 
         boolean success = false
 
@@ -175,7 +188,7 @@ def runWithRetry = { testRunner, context ->
 
             while (isTimeout && attempt <= maxAttempts) {
 
-                log.warn "Timeout on step: ${stepName}, Attempt: ${attempt}"
+                log.warn "Timeout on step: ${testStepName}, Attempt: ${attempt}"
 
                 sleep(retryDelay)
 
@@ -196,41 +209,27 @@ def runWithRetry = { testRunner, context ->
             def requestContent = step.testRequest?.requestContent
             def responseContent = result.responseContent ?: ""
 
-            def testSuite = testCase.testSuite
+            def safeTestSuiteName = testSuite.name.replaceAll(/[\\\/:*?"<>|]/, "_")
+            def safeTestCaseName = testCase.name.replaceAll(/[\\\/:*?"<>|]/, "_")
+            def safeTestStepName = testStepName.replaceAll("[^a-zA-Z0-9._-]", "_")
 
-            def workspace = System.getenv("WORKSPACE")
-            def buildNumber = System.getenv("BUILD_NUMBER")
-
-            def rootOutputDir
-
-            if (workspace && buildNumber) {
-                rootOutputDir = new File("${workspace}/${buildNumber}/tc_data")
-            } else {
-                def basePath = new File(project.path).parentFile.path
-                rootOutputDir = new File("${basePath}/tc_data")
-            }
-
-            def suiteName = testSuite.name.replaceAll(/[\\\/:*?"<>|]/, "_")
-            def caseName = testCase.name.replaceAll(/[\\\/:*?"<>|]/, "_")
-            def safeName = stepName.replaceAll("[^a-zA-Z0-9._-]", "_")
-
-            def requestDir = new File(rootOutputDir, "${suiteName}/${caseName}/requests")
-            def responseDir = new File(rootOutputDir, "${suiteName}/${caseName}/responses")
+            def requestDir = new File(rootOutputDir, "${safeTestSuiteName}/${safeTestCaseName}/requests")
+            def responseDir = new File(rootOutputDir, "${safeTestSuiteName}/${safeTestCaseName}/responses")
 
             requestDir.mkdirs()
             responseDir.mkdirs()
 
             if (requestContent?.trim()) {
-                new File(requestDir, "${safeName}.json").write(requestContent, "UTF-8")
+                new File(requestDir, "${safeTestStepName}.json").write(requestContent, "UTF-8")
             }
 
             if (responseContent?.trim()) {
-                new File(responseDir, "${safeName}.json").write(responseContent, "UTF-8")
+                new File(responseDir, "${safeTestStepName}.json").write(responseContent, "UTF-8")
             }
         }
 
         if (!success) {
-            testRunner.fail("Test failed at step: ${stepName}")
+            testRunner.fail("Test failed at step: ${testStepName}")
             log.info "Response: ${result.responseContent}"
             return
         }
