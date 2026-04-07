@@ -161,6 +161,10 @@ def runWithRetry = { testRunner, context ->
 
     for (step in testSteps) {
 
+        if (step == context.currentStep) {
+            continue
+        }
+
         def testStepName = step.getName()
 
         if (step.isDisabled()) {
