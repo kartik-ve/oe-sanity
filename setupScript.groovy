@@ -142,7 +142,6 @@ def runWithRetry = { testRunner, context ->
     def timeoutString = "timed out"
 
     def passedString = isReadyAPI ? "PASS" : "OK"
-    log.info isReadyAPI
 
     def testCase = context.testCase
     def testSuite = testCase.testSuite
@@ -171,8 +170,6 @@ def runWithRetry = { testRunner, context ->
 
         def stepType = step.getClass().getSimpleName()
         def isApiStep = stepType in ["RestTestRequestStep", "HttpTestRequestStep"]
-
-        log.info "Executing step: ${testStepName} (${stepType})"
 
         boolean success = false
 
@@ -230,7 +227,6 @@ def runWithRetry = { testRunner, context ->
 
         if (!success) {
             testRunner.fail("Test failed at step: ${testStepName}")
-            log.info "Response: ${result.responseContent}"
             return
         }
     }
