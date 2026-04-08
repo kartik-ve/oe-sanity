@@ -68,14 +68,14 @@ public final class SanityRunner {
         }
 
         if ("EXTENDED".equalsIgnoreCase(params.get("type"))) {
-            String[] flows = params.getOrDefault("flows", config.getProperty("flows")).split("\\|");
+            String[] flows = params.getOrDefault("flows", config.getProperty("flows")).split("\\s*,\\s*");
 
             int project = Integer.parseInt(config.getProperty("project." + params.get("project").toLowerCase()));
 
             Path excelPath = buildDir.resolve(config.getProperty("dir.exceptions"));
 
             for (String flow : flows) {
-                Path logFile = errorDir.resolve(flow.toUpperCase() + ".err");
+                Path logFile = errorDir.resolve(flow + ".err");
 
                 if (!Files.exists(logFile)) {
                     continue;
