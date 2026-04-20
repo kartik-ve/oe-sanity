@@ -137,9 +137,19 @@ def runWithRetry = { testRunner, context ->
         rootOutputDir = new File("${basePath}/tc_data")
     }
 
-    for (step in testSteps) {
+    int i = 0
+    int restartIndex = -1
+    int globalAttempt = 2
+    def globalRetryErrors = [
+        "Cant add ProductSpecContainmentID:\\d+ as it exceeded its maximum quantity",
+        "The input productID \\d+ to remove was not found"
+    ]
+
+    while (i < testSteps.size()) {
+        def step = testSteps[i]
 
         if (step == context.currentStep) {
+            i++
             continue
         }
 
@@ -147,8 +157,11 @@ def runWithRetry = { testRunner, context ->
 
         if (step.isDisabled()) {
             log.info "Skipping disabled step: ${testStepName}"
+            i++
             continue
         }
+
+        log.info "Executing step ${i + 1}: ${testStepName}"
 
         def stepType = step.getClass().getSimpleName()
         def isApiStep = stepType in ["RestTestRequestStep", "HttpTestRequestStep"]
@@ -160,12 +173,15 @@ def runWithRetry = { testRunner, context ->
         if (result.status.toString() == passedString) {
             success = true
         } else if (isApiStep) {
+            def requestContent = step.testRequest?.requestContent ?: ""
             def responseContent = result.responseContent ?: ""
             def isTimeout = responseContent.toLowerCase().contains(timeoutString)
 
             int attempt = 2
+            boolean globalRetrying = false
 
             while (isTimeout && attempt <= maxAttempts) {
+                attempt++
 
                 log.warn "Timeout on step: ${testStepName}, Attempt: ${attempt}"
 
@@ -180,11 +196,50 @@ def runWithRetry = { testRunner, context ->
                 }
 
                 isTimeout = responseContent.toLowerCase().contains(timeoutString)
-                attempt++
+
+                if (isTimeout) {
+                    continue
+                }
+
+                def globalRetry = {
+                    if (restartIndex == -1) {
+                        log.error "No Valid restart index found for global retry on step: ${testStepName}"
+                        return false
+                    }
+
+                    for (pattern in globalRetryErrors) {
+                        if ((responseContent =~ pattern).find()) {
+                            return true
+                        }
+                    }
+
+                    return false
+                }
+
+                boolean isPCApi = (requestContent?.trim() =~ /^\{\s*"ImplProductsConfigurationRequest"/).find()
+                if (isPCApi && globalRetry()) {
+                    if (globalAttempt <= maxAttempts) {
+                        log.info "Global retry triggered on step: ${testStepName}, Attempt: ${globalAttempt}"
+
+                        i = restartIndex
+
+                        globalAttempt++
+                        globalRetrying = true
+                        break
+                    } else {
+                        log.error "Max global retry attempts reached. Failing test at step: ${testStepName}"
+                    }
+                }
             }
-            
-            def requestContent = step.testRequest?.requestContent
+        }
+
+        if (isApiStep) {
+            def requestContent = step.testRequest?.requestContent ?: ""
             def responseContent = result.responseContent ?: ""
+
+            if (restartIndex == -1) {
+                restartIndex = (requestContent?.trim() =~ /^\{\s*"ImplCreateOrderRequest"/).find() ? i : restartIndex
+            }
 
             def safeTestSuiteName = testSuite.name.replaceAll(/[\\\/:*?"<>|]/, "_")
             def safeTestCaseName = testCase.name.replaceAll(/[\\\/:*?"<>|]/, "_")
@@ -209,6 +264,8 @@ def runWithRetry = { testRunner, context ->
             testRunner.fail("Test failed at step: ${testStepName}")
             return
         }
+
+        i++
     }
 }
 
