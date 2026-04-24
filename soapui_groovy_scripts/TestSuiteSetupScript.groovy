@@ -1,5 +1,12 @@
 // Environment Configuration &amp; Initialization
 
+def workspace = System.getenv("WORKSPACE")
+def buildNumber = System.getenv("BUILD_NUMBER")
+
+if (workspace &amp;&amp; buildNumber) {
+    return // Skip setup if running in Jenkins, as it will be handled by ProjectLoadScript
+}
+
 def envConfig = [
     "8285": [
         hostname: "illnqw8285",
