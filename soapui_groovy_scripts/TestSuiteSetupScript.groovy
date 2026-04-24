@@ -100,8 +100,6 @@ def activeEnv = project.activeEnvironment
 def env = ""
 
 if (activeEnv &amp;&amp; activeEnv.name != "Default environment" &amp;&amp; activeEnv.name != "Default") {
-    log.info "ENV found: ${activeEnv.name}. Continuing..."
-
     def service = activeEnv.getRestServiceAt(0) ?: activeEnv.getSoapServiceAt(0)
     def endpoint = service?.getEndpoint()?.getEndpointString() ?: ""
 
@@ -138,9 +136,3 @@ project.setPropertyValue("MecEndpoint", endpoint)
 project.setPropertyValue("MecDBConnection", jdbcUrl)
 project.setPropertyValue("USER", username)
 project.setPropertyValue("HOST", hostname)
-
-log.info "ENV: ${env}"
-log.info "Endpoint: ${endpoint}"
-log.info "JDBC URL: ${jdbcUrl}"
-log.info "User: ${username}"
-log.info "Host: ${hostname}"
