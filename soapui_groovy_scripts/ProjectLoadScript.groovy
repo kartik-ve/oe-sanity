@@ -109,10 +109,6 @@ if (env) {
         project.setPropertyValue("HOST", hostname)
 
         log.info "ENV: ${env}"
-        log.info "Endpoint: ${endpoint}"
-        log.info "JDBC URL: ${jdbcUrl}"
-        log.info "User: ${username}"
-        log.info "Host: ${hostname}"
     }
 }
 
@@ -166,7 +162,6 @@ def runWithRetry = { testRunner, context ->
         def testStepName = step.getName()
 
         if (step.isDisabled()) {
-            log.info "Skipping disabled step: ${testStepName}"
             i++
             continue
         }
@@ -229,7 +224,7 @@ def runWithRetry = { testRunner, context ->
                 boolean isPCApi = (requestContent?.trim() =~ /^\{\s*"ImplProductsConfigurationRequest"/).find()
                 if (isPCApi && globalRetry()) {
                     if (globalAttempt <= maxAttempts) {
-                        log.info "Global retry triggered on step: ${testStepName}, Attempt: ${globalAttempt}"
+                        log.warn "Global retry triggered on step: ${testStepName}, Attempt: ${globalAttempt}"
 
                         i = restartIndex
 
