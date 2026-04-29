@@ -123,10 +123,10 @@ def runWithRetry = { testRunner, context ->
 
     def MAX_PATH_LENGTH = 260
     
-    def testCase = context.testCase
+    def testCase  = context.testCase
     def testSuite = testCase.testSuite
 
-    def workspace = System.getenv("WORKSPACE")
+    def workspace   = System.getenv("WORKSPACE")
     def buildNumber = System.getenv("BUILD_NUMBER")
 
     def rootOutputDir
@@ -134,21 +134,23 @@ def runWithRetry = { testRunner, context ->
     if (workspace && buildNumber) {
         rootOutputDir = new File("${workspace}/${buildNumber}/tc_data")
     } else {
-        def basePath = new File(project.path).parentFile.path
+        def basePath  = new File(project.path).parentFile.path
         rootOutputDir = new File("${basePath}/tc_data")
     }
 
     def safeTestSuiteName = testSuite.name.replaceAll(/[\\\/:*?"<>|]/, "_")
-    def safeTestCaseName = testCase.name.replaceAll(/[\\\/:*?"<>|]/, "_")
+    def safeTestCaseName  = testCase.name.replaceAll(/[\\\/:*?"<>|]/, "_")
 
-    def testSuiteDir = new File(rootOutputDir, safeTestSuiteName)
+    def testSuiteDir  = new File(rootOutputDir, safeTestSuiteName)
     def absPathLength = testSuiteDir.getAbsolutePath().length()
 
-    def maxTestStepNameLength = 62 // Length of the longest test step name "RCI (Specific Offers)"
+    def maxTestStepNameLength  = 62 // Length of the longest test step name "RCI (Specific Offers)"
     def numberOfPathSeparators = 3 // testSuiteDir + testCaseDir + request/responseDir + file
-    def maxTestCaseNameLength = MAX_PATH_LENGTH - absPathLength - Math.max("responses".length(), "requests".length()) - maxTestStepNameLength - ".json".length() - numberOfPathSeparators
+    def maxTestCaseNameLength  = MAX_PATH_LENGTH - absPathLength - Math.max("responses".length(), "requests".length()) - maxTestStepNameLength - ".json".length() - numberOfPathSeparators
 
-    safeTestCaseName = safeTestCaseName.substring(0, Math.min(safeTestCaseName.length(), maxTestCaseNameLength))
+    safeTestCaseName = safeTestCaseName
+                        .substring(0, Math.min(safeTestCaseName.length(), maxTestCaseNameLength))
+                        .trim()
 
     def requestDir  = new File(testSuiteDir, "${safeTestCaseName}/requests")
     def responseDir = new File(testSuiteDir, "${safeTestCaseName}/responses")
@@ -156,8 +158,8 @@ def runWithRetry = { testRunner, context ->
     requestDir.mkdirs()
     responseDir.mkdirs()
 
-    def maxAttempts = 3
-    def retryDelay = 1000
+    def maxAttempts   = 3
+    def retryDelay    = 1000
     def timeoutString = "timed out"
 
     def passedString = isReadyAPI ? "PASS" : "OK"
@@ -165,7 +167,7 @@ def runWithRetry = { testRunner, context ->
     def testSteps = testCase.getTestStepList()
 
     int i = 0
-    int restartIndex = -1
+    int restartIndex  = -1
     int globalAttempt = 2
     def globalRetryErrors = [
         "Cant add ProductSpecContainmentID:\\d+ as it exceeded its maximum quantity",
@@ -189,7 +191,7 @@ def runWithRetry = { testRunner, context ->
 
         log.info "Executing step ${i + 1}: ${testStepName}"
 
-        def stepType = step.getClass().getSimpleName()
+        def stepType  = step.getClass().getSimpleName()
         def isApiStep = stepType in ["RestTestRequestStep", "HttpTestRequestStep"]
 
         boolean success = false
@@ -265,7 +267,7 @@ def runWithRetry = { testRunner, context ->
         }
 
         if (isApiStep) {
-            def requestContent = step.testRequest?.requestContent ?: ""
+            def requestContent  = step.testRequest?.requestContent ?: ""
             def responseContent = result.responseContent ?: ""
 
             if (restartIndex == -1) {
@@ -279,7 +281,13 @@ def runWithRetry = { testRunner, context ->
             }
 
             def safeTestStepName = testStepName.replaceAll("[^a-zA-Z0-9._-]", "_")
-            safeTestStepName = safeTestStepName.substring(0, Math.min(safeTestStepName.length(), maxTestStepNameLength))
+
+            safeTestStepName = safeTestStepName
+                                .substring(
+                                    0,
+                                    Math.min(safeTestStepName.length(), maxTestStepNameLength)
+                                )
+                                .trim()
 
             if (requestContent?.trim()) {
                 new File(requestDir, "${safeTestStepName}.json").write(requestContent, "UTF-8")
