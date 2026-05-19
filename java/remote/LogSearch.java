@@ -11,22 +11,22 @@ public class LogSearch {
 
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Usage: java LogSearch <input_log_file> <generate_unique_in_session_file:true/false>");
+            System.out.println("Usage: java LogSearch <input_log_file> <enable_unique_in_session_file:true/false>");
             return;
         }
 
         String fileName = args[0].substring(0, args[0].lastIndexOf("."));
-        boolean generateUniqueInSession = Boolean.parseBoolean(args[1]);
+        boolean enableUniqueInSession = Boolean.parseBoolean(args[1]);
 
         try (BufferedReader br = new BufferedReader(new FileReader(args[0]), 32 * 1024);
-                BufferedWriter uniqueOverall = new BufferedWriter(new FileWriter(fileName + ".err"));) {
-            if (generateUniqueInSession) {
-                try (BufferedWriter uniqueInSession = new BufferedWriter(
+                BufferedWriter uniqOverall = new BufferedWriter(new FileWriter(fileName + ".err"));) {
+            if (enableUniqueInSession) {
+                try (BufferedWriter uniqInSesh = new BufferedWriter(
                         new FileWriter(fileName + "_uniq_sesh.err"));) {
-                    findAndLogErrors(br, uniqueOverall, uniqueInSession);
+                    findAndLogErrors(br, uniqOverall, uniqInSesh);
                 }
             } else {
-                findAndLogErrors(br, uniqueOverall, null);
+                findAndLogErrors(br, uniqOverall, null);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -34,12 +34,12 @@ public class LogSearch {
         }
     }
 
-    private static void findAndLogErrors(BufferedReader br, BufferedWriter uniqueOverall,
-            BufferedWriter uniqueInSession) throws IOException {
+    private static void findAndLogErrors(BufferedReader br, BufferedWriter uniqOverall,
+            BufferedWriter uniqInSesh) throws IOException {
 
         HashSet<String> errors = new HashSet<>();
         HashMap<String, HashSet<String>> sessionMap = null;
-        if (uniqueInSession != null) {
+        if (uniqInSesh != null) {
             sessionMap = new HashMap<>();
         }
 
@@ -69,9 +69,9 @@ public class LogSearch {
                     if (!errors.contains(line2)) {
                         errors.add(line2);
                         String error = generateErrorLines(br, line1, line2, line3);
-                        uniqueOverall.write(error);
+                        uniqOverall.write(error);
 
-                        if (uniqueInSession != null) {
+                        if (uniqInSesh != null) {
                             HashSet<String> err;
                             if (sessionMap.containsKey(id)) {
                                 err = sessionMap.get(id);
@@ -80,19 +80,19 @@ public class LogSearch {
                                 sessionMap.put(id, err);
                             }
                             err.add(line2);
-                            uniqueInSession.write(error);
+                            uniqInSesh.write(error);
                         }
-                    } else if (uniqueInSession != null) {
+                    } else if (uniqInSesh != null) {
                         if (!sessionMap.containsKey(id)) {
                             HashSet<String> err = new HashSet<>();
                             sessionMap.put(id, err);
                             err.add(line2);
-                            uniqueInSession.write(generateErrorLines(br, line1, line2, line3));
+                            uniqInSesh.write(generateErrorLines(br, line1, line2, line3));
                         } else {
                             HashSet<String> err = sessionMap.get(id);
                             if (!err.contains(line2)) {
                                 err.add(line2);
-                                uniqueInSession.write(generateErrorLines(br, line1, line2, line3));
+                                uniqInSesh.write(generateErrorLines(br, line1, line2, line3));
                             }
                         }
                     }
@@ -114,9 +114,9 @@ public class LogSearch {
                     if (!errors.contains(errorIdentifier)) {
                         errors.add(errorIdentifier);
                         String error = generateErrorLines(br, line1, line2, line3);
-                        uniqueOverall.write(error);
+                        uniqOverall.write(error);
 
-                        if (uniqueInSession != null) {
+                        if (uniqInSesh != null) {
                             HashSet<String> err;
                             if (sessionMap.containsKey(id)) {
                                 err = sessionMap.get(id);
@@ -125,19 +125,19 @@ public class LogSearch {
                                 sessionMap.put(id, err);
                             }
                             err.add(errorIdentifier);
-                            uniqueInSession.write(error);
+                            uniqInSesh.write(error);
                         }
-                    } else if (uniqueInSession != null) {
+                    } else if (uniqInSesh != null) {
                         if (!sessionMap.containsKey(id)) {
                             HashSet<String> err = new HashSet<>();
                             sessionMap.put(id, err);
                             err.add(errorIdentifier);
-                            uniqueInSession.write(generateErrorLines(br, line1, line2, line3));
+                            uniqInSesh.write(generateErrorLines(br, line1, line2, line3));
                         } else {
                             HashSet<String> err = sessionMap.get(id);
                             if (!err.contains(errorIdentifier)) {
                                 err.add(errorIdentifier);
-                                uniqueInSession.write(generateErrorLines(br, line1, line2, line3));
+                                uniqInSesh.write(generateErrorLines(br, line1, line2, line3));
                             }
                         }
                     }
@@ -145,16 +145,16 @@ public class LogSearch {
 
                 line2 = br.readLine();
                 line3 = br.readLine();
-            } else if (uniqueInSession != null && line3.contains("Rule Ended [ Unsuccessfully ]")) {
-                uniqueInSession.write(line1);
-                uniqueInSession.newLine();
-                uniqueInSession.write(line2);
-                uniqueInSession.newLine();
-                uniqueInSession.write(line3);
-                uniqueInSession.newLine();
+            } else if (uniqInSesh != null && line3.contains("Rule Ended [ Unsuccessfully ]")) {
+                uniqInSesh.write(line1);
+                uniqInSesh.newLine();
+                uniqInSesh.write(line2);
+                uniqInSesh.newLine();
+                uniqInSesh.write(line3);
+                uniqInSesh.newLine();
                 while ((line1 = br.readLine()) != null && !line1.isEmpty()) {
-                    uniqueInSession.write(line1);
-                    uniqueInSession.newLine();
+                    uniqInSesh.write(line1);
+                    uniqInSesh.newLine();
                 }
 
                 line2 = br.readLine();
@@ -167,8 +167,8 @@ public class LogSearch {
         }
 
         for (String sessionID : sessionIDs) {
-            uniqueOverall.write(sessionID);
-            uniqueOverall.newLine();
+            uniqOverall.write(sessionID);
+            uniqOverall.newLine();
         }
     }
 
