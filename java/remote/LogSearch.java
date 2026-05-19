@@ -10,18 +10,24 @@ import java.util.HashMap;
 public class LogSearch {
 
     public static void main(String[] args) {
-        if (args.length != 1) {
-            System.out.println("Usage: java LogSearch <input_log_file>");
+        if (args.length != 2) {
+            System.out.println("Usage: java LogSearch <input_log_file> <generate_unique_in_session_file:true/false>");
             return;
         }
 
         String fileName = args[0].substring(0, args[0].lastIndexOf("."));
+        boolean generateUniqueInSession = Boolean.parseBoolean(args[1]);
 
         try (BufferedReader br = new BufferedReader(new FileReader(args[0]), 32 * 1024);
-                BufferedWriter uniqueOverall = new BufferedWriter(new FileWriter(fileName + ".err"));
-                // BufferedWriter uniqueInSession = new BufferedWriter(new FileWriter(fileName + "_uniq_sesh.err"));
-                        ) {
-            findAndLogErrors(br, uniqueOverall, null);
+                BufferedWriter uniqueOverall = new BufferedWriter(new FileWriter(fileName + ".err"));) {
+            if (generateUniqueInSession) {
+                try (BufferedWriter uniqueInSession = new BufferedWriter(
+                        new FileWriter(fileName + "_uniq_sesh.err"));) {
+                    findAndLogErrors(br, uniqueOverall, uniqueInSession);
+                }
+            } else {
+                findAndLogErrors(br, uniqueOverall, null);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return;
