@@ -1,64 +1,61 @@
-<![CDATA[def project = runner.testSuite.project
-def suite = runner.testSuite
+// Object available by default: virtRunner, log, testSuite, context, runner
 
-def workspace = System.getenv("WORKSPACE")
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
+
+def workspace   = System.getenv("WORKSPACE")
 def buildNumber = System.getenv("BUILD_NUMBER")
 
 def rootOutputDir
 
 if (workspace && buildNumber) {
-    rootOutputDir = new File("${workspace}/${buildNumber}/tc_data")
+    rootOutputDir = new File("${workspace}/${buildNumber}/error_logs")
 } else {
-    def basePath = new File(project.path).parentFile.path
+    def basePath  = new File(testSuite.project.path).parentFile.path
     rootOutputDir = new File("${basePath}/tc_data")
 }
 
-rootOutputDir.mkdirs()
+def file = new File(rootOutputDir, "session_ids.txt")
+def path = Paths.get(file.getAbsolutePath())
 
-def suiteName = suite.name.replaceAll(/[\\\/:*?"<>|]/, "_")
+StringBuilder sb = new StringBuilder()
 
-int totalSaved = 0
+if (!Files.exists(path)) {
+    Files.createDirectories(path.getParent())
+    Files.createFile(path)
+} else {
+    sb.append("\n")
+}
 
-runner.results.each { caseResult ->
+sb.append(testSuite.name).append("\n")
 
-    def testCase = caseResult.testCase
-    def caseName = testCase.name.replaceAll(/[\\\/:*?"<>|]/, "_")
+testSuite.testCaseList.each { tc ->
 
-    def caseRootDir = new File(rootOutputDir, "${suiteName}/${caseName}")
-    def requestDir = new File(caseRootDir, "requests")
-    def responseDir = new File(caseRootDir, "responses")
+    if (!tc.isDisabled()) {
 
-    requestDir.mkdirs()
-    responseDir.mkdirs()
+        try {
+            def propsStep = tc.getTestStepByName("SessionAndTransaction_ids")
 
-    // Get only executed steps for this run
-    def executedSteps = caseResult.results.collect { it.testStep }
+            if (propsStep != null) {
 
-    executedSteps.each { step ->
+                def sessionId = propsStep.getPropertyValue("Session_ID")
 
-        if (step instanceof com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestStep
-                && !step.disabled) {
-
-            def safeName = step.name.replaceAll("[^a-zA-Z0-9._-]", "_")
-
-            // REQUEST
-            def requestContent = step.testRequest?.requestContent
-            if (requestContent?.trim()) {
-                new File(requestDir, "${safeName}.json")
-                        .write(requestContent, "UTF-8")
+                if (sessionId != null && sessionId.trim()) {
+                    sb.append(sessionId + ": " + tc.name + "\n")
+                }
             }
 
-            // RESPONSE (read from step, not stepResult)
-            def responseContent = step.testRequest?.response?.contentAsString
-            if (responseContent?.trim()) {
-                new File(responseDir, "${safeName}.json")
-                        .write(responseContent, "UTF-8")
-            }
-
-            totalSaved++
+        } catch (Exception e) {
+            log.warn("Error processing testcase '${tc.name}': ${e.message}")
         }
     }
 }
 
-log.info "Total API steps saved (request/response pairs): ${totalSaved}"
-]]>
+Files.write(
+    path,
+    sb.toString().getBytes("UTF-8"),
+    StandardOpenOption.APPEND
+)
+
+log.info("Session IDs written to: " + file.getAbsolutePath())
