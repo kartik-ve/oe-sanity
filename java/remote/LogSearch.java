@@ -4,7 +4,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.HashMap;
 
 public class LogSearch {
@@ -43,15 +42,11 @@ public class LogSearch {
             sessionMap = new HashMap<>();
         }
 
-        LinkedHashSet<String> sessionIDs = new LinkedHashSet<>();
-
         String line1 = br.readLine();
         String line2 = br.readLine();
         String line3 = br.readLine();
         while (line3 != null) {
-            if (line1.contains("Starting Rule Debug Messages") && line1.contains("Session Id=")) {
-                sessionIDs.add(line1.split("Session Id=")[1].split(" ")[0]);
-            } else if (line1.contains("<Error>")) {
+            if (line1.contains("<Error>")) {
                 int idx = line1.indexOf("Session Id=");
                 StringBuilder idSb = new StringBuilder();
                 for (int i = idx + 11; i < line1.length(); i++) {
@@ -164,11 +159,6 @@ public class LogSearch {
             line1 = line2;
             line2 = line3;
             line3 = br.readLine();
-        }
-
-        for (String sessionID : sessionIDs) {
-            uniqOverall.write(sessionID);
-            uniqOverall.newLine();
         }
     }
 
