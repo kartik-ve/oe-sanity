@@ -136,7 +136,7 @@ def isReadyAPI = Package.getPackages().any {
 
 def runWithRetry = { testRunner, context ->
 
-    def MAX_PATH_LENGTH = 259
+    int MAX_PATH_LENGTH = 259
     
     def testCase  = context.testCase
     def testSuite = testCase.testSuite
@@ -161,13 +161,15 @@ def runWithRetry = { testRunner, context ->
 
     def maxTestStepNameLength  = 62 // Length of the longest test step name "RCI (Specific Offers)"
     def numberOfPathSeparators = 3 // testSuiteDir + testCaseDir + request/responseDir + file
-    def maxTestCaseNameLength  = MAX_PATH_LENGTH
-                                    - absPathLength
-                                    - " ~FAILED".length()
-                                    - Math.max("responses".length(), "requests".length())
-                                    - maxTestStepNameLength
-                                    - ".json".length()
-                                    - numberOfPathSeparators
+    def maxTestCaseNameLength  = (
+        MAX_PATH_LENGTH
+        - absPathLength
+        - " ~FAILED".length()
+        - Math.max("responses".length(), "requests".length())
+        - maxTestStepNameLength
+        - ".json".length()
+        - numberOfPathSeparators
+    )
 
     safeTestCaseName = safeTestCaseName
                         .substring(0, Math.min(safeTestCaseName.length(), maxTestCaseNameLength))
@@ -292,13 +294,15 @@ def runWithRetry = { testRunner, context ->
             def responseContent = result.responseContent ?: ""
 
             if (restartIndex == -1) {
-                restartIndex = (requestContent?.trim() =~ /^\{\s*"ImplCreateOrderRequest"/).find()
-                                ? i
-                                : (
-                                    (requestContent?.trim() =~ /^\{\s*"ImplCreateAssignedProductsRequest"/).find()
-                                    ? i
-                                    : restartIndex
-                                )
+                restartIndex = (
+                    (requestContent?.trim() =~ /^\{\s*"ImplCreateOrderRequest"/).find()
+                    ? i
+                    : (
+                        (requestContent?.trim() =~ /^\{\s*"ImplCreateAssignedProductsRequest"/).find()
+                        ? i
+                        : restartIndex
+                    )
+                )
             }
 
             def safeTestStepName = testStepName.replaceAll("[^a-zA-Z0-9._-]", "_")
