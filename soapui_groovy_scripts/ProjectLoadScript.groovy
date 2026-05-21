@@ -161,7 +161,13 @@ def runWithRetry = { testRunner, context ->
 
     def maxTestStepNameLength  = 62 // Length of the longest test step name "RCI (Specific Offers)"
     def numberOfPathSeparators = 3 // testSuiteDir + testCaseDir + request/responseDir + file
-    def maxTestCaseNameLength  = MAX_PATH_LENGTH - absPathLength - Math.max("responses".length(), "requests".length()) - maxTestStepNameLength - ".json".length() - numberOfPathSeparators
+    def maxTestCaseNameLength  = MAX_PATH_LENGTH
+                                    - absPathLength
+                                    - " ~FAILED".length()
+                                    - Math.max("responses".length(), "requests".length())
+                                    - maxTestStepNameLength
+                                    - ".json".length()
+                                    - numberOfPathSeparators
 
     safeTestCaseName = safeTestCaseName
                         .substring(0, Math.min(safeTestCaseName.length(), maxTestCaseNameLength))
