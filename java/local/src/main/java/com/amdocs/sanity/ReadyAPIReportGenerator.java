@@ -134,7 +134,7 @@ final class ReadyAPIReportGenerator {
                         // Rename failed step's api_response file
                         if (apiResponsesDir != null && !apiResponsesDir.isEmpty()) {
                             try {
-                                renameFailedTestCaseDirectory(apiResponsesDir, testSuiteName, testCaseName);
+                                renameFailedTestCaseDirectory(apiResponsesDir, testSuiteName, shortTestCaseName(apiResponsesDir, testSuiteName, testCaseName));
                             } catch (IOException e) {
                                 System.err.println("Failed to rename failed testcase directory: " + testCaseName);
                                 e.printStackTrace();
@@ -156,6 +156,25 @@ final class ReadyAPIReportGenerator {
         }
 
         return results;
+    }
+
+    private static String shortTestCaseName(String apiResponsesDir, String testSuiteName, String testCaseName) {
+        int maxPathLength = 259;
+
+        Path testSuitePath = Paths.get(apiResponsesDir, testSuiteName);
+        int absPathLength = testSuitePath.toString().length();
+        int maxTestStepNameLength = 62; // Length of the longest test step name "RCI (Specific Offers)"
+        int numberOfPathSeparators = 3; // testSuiteDir + testCaseDir + request/responseDir + file
+
+        int maxTestCaseNameLength = maxPathLength
+                                        - absPathLength
+                                        - " ~FAILED".length()
+                                        - Math.max("responses".length(), "requests".length())
+                                        - maxTestStepNameLength
+                                        - ".json".length()
+                                        - numberOfPathSeparators;
+
+        return testCaseName.substring(0, Math.min(testCaseName.length(), maxTestCaseNameLength));
     }
 
     private static void renameFailedTestCaseDirectory(String apiResponsesDir,
@@ -188,7 +207,7 @@ final class ReadyAPIReportGenerator {
         if (name == null) {
             return "";
         }
-        return name.replaceAll("[<>:\"/\\\\|?*]", "_");
+        return name.replaceAll("[\\\\/:*?\"<>|]", "_");
     }
 
     private static TestResults mergeResults(List<TestResults> resultsList) {
