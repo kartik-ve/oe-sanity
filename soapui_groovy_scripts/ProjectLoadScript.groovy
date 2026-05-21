@@ -157,11 +157,11 @@ def runWithRetry = { testRunner, context ->
     def safeTestCaseName  = testCase.name.replaceAll(/[\\\/:*?"<>|]/, "_")
 
     def testSuiteDir  = new File(rootOutputDir, safeTestSuiteName)
-    def absPathLength = testSuiteDir.getAbsolutePath().length()
+    int absPathLength = testSuiteDir.getAbsolutePath().length()
 
-    def maxTestStepNameLength  = 62 // Length of the longest test step name "RCI (Specific Offers)"
-    def numberOfPathSeparators = 3 // testSuiteDir + testCaseDir + request/responseDir + file
-    def maxTestCaseNameLength  = (
+    int maxTestStepNameLength  = 62 // Length of the longest test step name "RCI (Specific Offers)"
+    int numberOfPathSeparators = 3 // testSuiteDir + testCaseDir + request/responseDir + file
+    int maxTestCaseNameLength  = (
         MAX_PATH_LENGTH
         - absPathLength
         - " ~FAILED".length()
@@ -181,8 +181,8 @@ def runWithRetry = { testRunner, context ->
     requestDir.mkdirs()
     responseDir.mkdirs()
 
-    def maxAttempts   = 3
-    def retryDelay    = 1000
+    int maxAttempts   = 3
+    int retryDelay    = 1000
     def timeoutString = "timed out"
 
     def passedString = isReadyAPI ? "PASS" : "OK"
