@@ -174,7 +174,7 @@ final class ReadyAPIReportGenerator {
                                         - ".json".length()
                                         - numberOfPathSeparators;
 
-        return testCaseName.substring(0, Math.min(testCaseName.length(), maxTestCaseNameLength));
+        return testCaseName.substring(0, Math.min(testCaseName.length(), maxTestCaseNameLength)).trim();
     }
 
     private static void renameFailedTestCaseDirectory(String apiResponsesDir,
